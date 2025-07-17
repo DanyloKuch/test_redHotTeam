@@ -347,25 +347,35 @@
 </style>
 
 <script>
-    document.addEventListener('DOMContentLoaded', function () {
-    var mySwiper = new Swiper('#Slider-Gallery-{{ section.id }}', {
-      direction: 'horizontal',
-      loop: false,
-      slidesPerView: {{ section.settings.slides_per_view }},
-      spaceBetween: {{ section.settings.space_between_slides }},
-      watchOverflow: true,
-      {% if section.settings.swiper_arrow %}
-      navigation: {
-        nextEl: '.swiper-button-next',
-        prevEl: '.swiper-button-prev',
-      },
-      {%endif%}
-      {% if section.settings.swiper_pagination %}
-      pagination: {
-        el: '.swiper-pagination',
-        clickable: true,
-      },
-      {% endif %}
-    });
+    function initializeSwiper(sectionId) {
+  var mySwiper = new Swiper(`#Slider-Gallery-${sectionId}`, {
+    direction: 'horizontal',
+    loop: false,
+    slidesPerView: {{ section.settings.slides_per_view }},
+    spaceBetween: {{ section.settings.space_between_slides }},
+    watchOverflow: true,
+    {% if section.settings.swiper_arrow %}
+    navigation: {
+      nextEl: '.swiper-button-next',
+      prevEl: '.swiper-button-prev',
+    },
+    {% endif %}
+    {% if section.settings.swiper_pagination %}
+    pagination: {
+      el: '.swiper-pagination',
+      clickable: true,
+    },
+    {% endif %}
   });
+}
+
+document.addEventListener('DOMContentLoaded', function () {
+  initializeSwiper('{{ section.id }}');
+});
+
+document.addEventListener('shopify:section:load', function (event) {
+  if (event.target.querySelector(`#Slider-Gallery-{{ section.id }}`)) {
+    initializeSwiper('{{ section.id }}');
+  }
+});
 </script>
