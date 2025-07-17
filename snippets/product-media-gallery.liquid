@@ -125,7 +125,9 @@
   <!-- Навігація та пагінація -->
   <div class="swiper-button-prev"></div>
   <div class="swiper-button-next"></div>
+  {% if section.settings.swiper_pagination %}
   <div class="swiper-pagination"></div>
+  {% endif %}
 </div>
     <div class="slider-buttons quick-add-hidden{% if hide_mobile_slider %} small-hide{% endif %}">
       <button
