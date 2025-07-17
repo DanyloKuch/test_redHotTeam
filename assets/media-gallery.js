@@ -12,47 +12,6 @@ if (!customElements.get('media-gallery')) {
         this.mql = window.matchMedia('(min-width: 750px)');
         if (!this.elements.thumbnails) return;
 
-        // Відладка та ініціалізація Swiper
-        if (this.elements.viewer) {
-          const swiperContainer = this.elements.viewer.querySelector('.product-gallery');
-          if (swiperContainer) {
-            const section = document.querySelector(`[data-section-id="${this.id.split('-')[1]}"]`);
-            const slidesPerView = parseInt(section.dataset.slidesPerView || 1);
-            const spaceBetween = parseInt(section.dataset.spaceBetween || 10);
-            const enablePagination = section.dataset.enablePagination === 'true';
-            const enableNavigation = section.dataset.enableNavigation === 'true';
-
-            console.log('Swiper Config:', { slidesPerView, spaceBetween, enablePagination, enableNavigation }); // Відладка
-
-            // Видаляємо стандартний slider-component, якщо він активний
-            const sliderComponent = this.elements.viewer.querySelector('slider-component');
-            if (sliderComponent) {
-              sliderComponent.remove();
-            }
-
-            this.swiper = new Swiper(swiperContainer, {
-              loop: true,
-              slidesPerView: slidesPerView,
-              spaceBetween: spaceBetween,
-              pagination: {
-                el: '.swiper-pagination',
-                clickable: true,
-                enabled: enablePagination,
-              },
-              navigation: {
-                nextEl: '.swiper-button-next',
-                prevEl: '.swiper-button-prev',
-                enabled: enableNavigation,
-              },
-            });
-
-            // Перевіряємо, чи ініціалізація пройшла успішно
-            if (!this.swiper) {
-              console.error('Swiper initialization failed for section:', this.id);
-            }
-          }
-        }
-
         this.elements.viewer.addEventListener('slideChanged', debounce(this.onSlideChanged.bind(this), 500));
         this.elements.thumbnails.querySelectorAll('[data-target]').forEach((mediaToSwitch) => {
           mediaToSwitch
@@ -62,7 +21,6 @@ if (!customElements.get('media-gallery')) {
         if (this.dataset.desktopLayout.includes('thumbnail') && this.mql.matches) this.removeListSemantic();
       }
 
-      // Решта методів залишаються без змін
       onSlideChanged(event) {
         const thumbnail = this.elements.thumbnails.querySelector(
           `[data-target="${event.detail.currentElement.dataset.mediaId}"]`
@@ -99,6 +57,7 @@ if (!customElements.get('media-gallery')) {
             activeMedia.parentElement.scrollTo({ left: activeMedia.offsetLeft });
           }
           const activeMediaRect = activeMedia.getBoundingClientRect();
+          // Don't scroll if the image is already in view
           if (activeMediaRect.top > -0.5) return;
           const top = activeMediaRect.top + window.scrollY;
           window.scrollTo({ top: top, behavior: 'smooth' });
