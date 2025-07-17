@@ -348,22 +348,26 @@
 </style>
 
 <script>
-  document.addEventListener('DOMContentLoaded', function () {
-  var mySwiper = new Swiper('#Slider-Gallery-{{ section.id }}', {
-    direction: 'horizontal',
-    loop: true,
-    slidesPerView: 1,
-    spaceBetween: 10,
-    navigation: {
-      nextEl: '.swiper-button-next',
-      prevEl: '.swiper-button-prev',
-    },
-    {% if section.settings.swiper_pagination %}
-    pagination: {
-      el: '.swiper-pagination',
-      clickable: true,
-    },
-    {% endif %}
-  });
+  document.addEventListener('shopify:section:load', function (event) {
+  if (event.target.querySelector(`#Slider-Gallery-{{ section.id }}`)) {
+    var existingSwiper = document.querySelector(`#Slider-Gallery-{{ section.id }}`).swiper;
+    if (existingSwiper) existingSwiper.destroy(true, true);
+    new Swiper(`#Slider-Gallery-{{ section.id }}`, {
+      direction: 'horizontal',
+      loop: true,
+      slidesPerView: 1,
+      spaceBetween: 10,
+      navigation: {
+        nextEl: '.swiper-button-next',
+        prevEl: '.swiper-button-prev',
+      },
+      {% if section.settings.swiper_pagination %}
+      pagination: {
+        el: '.swiper-pagination',
+        clickable: true,
+      },
+      {% endif %}
+    });
+  }
 });
 </script>
