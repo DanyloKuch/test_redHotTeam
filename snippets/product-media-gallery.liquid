@@ -349,22 +349,21 @@
 
 <script>
   document.addEventListener('DOMContentLoaded', function () {
-    var mySwiper = new Swiper('#Slider-Gallery-{{ section.id }}', {
-      direction: 'horizontal', // Горизонтальний слайдер
-      loop: true,              // Зациклений слайдер
-      slidesPerView: 1,        // Один слайд видно за раз (можеш змінити)
-      spaceBetween: 10,        // Відстань між слайдами
-      navigation: {
-        nextEl: '.swiper-button-next',
-        prevEl: '.swiper-button-prev',
-      },
-      {% if section.settings.swiper_pagination %}
+  var mySwiper = new Swiper('#Slider-Gallery-{{ section.id }}', {
+    direction: 'horizontal',
+    loop: true,
+    slidesPerView: 1,
+    spaceBetween: 10,
+    navigation: {
+      nextEl: '.swiper-button-next',
+      prevEl: '.swiper-button-prev',
+    },
+    {% if section.settings.swiper_pagination %}
     pagination: {
-      pagination: {
-        el: '.swiper-pagination',
-        clickable: true,
-      },
-      {% endif %}
-    });
+      el: '.swiper-pagination',
+      clickable: true,
+    },
+    {% endif %}
   });
+});
 </script>
