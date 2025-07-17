@@ -64,7 +64,11 @@
         {%- if product.selected_or_first_available_variant.featured_media != null -%}
           {%- assign featured_media = product.selected_or_first_available_variant.featured_media -%}
           {%- assign media_position = 1 -%}
-          <div class="swiper-slide" data-media-id="{{ section.id }}-{{ featured_media.id }}">
+          <div
+            class="swiper-slide"
+            data-media-id="{{ section.id }}-{{ featured_media.id }}"
+            data-color="{{ featured_media.alt | escape | downcase }}"
+          >
             {% render 'product-thumbnail',
               media: featured_media,
               media_count: media_count,
@@ -349,11 +353,11 @@
     width: 100%; /* Фіксує ширину кожного слайда */
     display: block;
   }
-  .swiper-slide[style*="display: none"] {
-  width: 0;
-  height: 0;
-  overflow: hidden;
-}
+  .swiper-slide[style*='display: none'] {
+    width: 0;
+    height: 0;
+    overflow: hidden;
+  }
 </style>
 
 <script>
@@ -391,6 +395,7 @@ document.addEventListener('shopify:section:load', function (event) {
   }
 });
 </script>
+
 <script>
   function filterSlidesByColor(sectionId, selectedColor) {
   const slides = document.querySelectorAll(`#Slider-Gallery-${sectionId} .swiper-slide`);
@@ -399,8 +404,9 @@ document.addEventListener('shopify:section:load', function (event) {
   });
   const swiper = document.querySelector(`#Slider-Gallery-${sectionId}`).swiper;
   if (swiper) {
-    swiper.destroy(true, true); // Знищити Swiper
-    initializeSwiper(sectionId); // Переініціалізувати Swiper
+    swiper.update(); // Оновити Swiper замість знищення
+  } else {
+    initializeSwiper(sectionId); // Ініціалізувати, якщо ще не створено
   }
 }
 
@@ -422,6 +428,11 @@ document.addEventListener('DOMContentLoaded', function () {
     }
   } else {
     console.log('variant-selects not found');
+  }
+  // Ініціалізація Swiper після фільтрації
+  const checkedInput = variantSelects ? variantSelects.querySelector('input:checked') : null;
+  if (checkedInput) {
+    filterSlidesByColor('{{ section.id }}', checkedInput.value.toLowerCase().trim());
   }
   initializeSwiper('{{ section.id }}');
 });
