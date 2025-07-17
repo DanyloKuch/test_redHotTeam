@@ -78,6 +78,8 @@
         "image_zoom": "lightbox",
         "hide_variants": true,
         "enable_video_looping": false,
+        "swiper_pagination": true,
+        "swiper_arrow": false,
         "padding_top": 36,
         "padding_bottom": 12
       }
