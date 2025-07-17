@@ -397,36 +397,42 @@ document.addEventListener('shopify:section:load', function (event) {
   slides.forEach(slide => {
     slide.style.display = slide.dataset.color === selectedColor ? 'block' : 'none';
   });
-  // Оновлення Swiper після фільтрації
   const swiper = document.querySelector(`#Slider-Gallery-${sectionId}`).swiper;
   if (swiper) {
-    swiper.update();
+    swiper.destroy(true, true); // Знищити Swiper
+    initializeSwiper(sectionId); // Переініціалізувати Swiper
   }
 }
 
 document.addEventListener('DOMContentLoaded', function () {
-  const variantRadios = document.querySelector('variant-radios');
-  if (variantRadios) {
-    variantRadios.addEventListener('change', function (event) {
-      const selectedColor = event.target.value.toLowerCase();
+  const variantSelects = document.querySelector('variant-selects');
+  if (variantSelects) {
+    console.log('variant-selects found');
+    variantSelects.addEventListener('change', function (event) {
+      const selectedColor = event.target.value.toLowerCase().trim();
+      console.log('Selected color:', selectedColor);
       filterSlidesByColor('{{ section.id }}', selectedColor);
     });
-    // Фільтрація для початкового варі Married: 2
-    const checkedInput = variantRadios.querySelector('input:checked');
+    const checkedInput = variantSelects.querySelector('input:checked');
     if (checkedInput) {
-      filterSlidesByColor('{{ section.id }}', checkedInput.value.toLowerCase());
+      console.log('Initial color:', checkedInput.value);
+      filterSlidesByColor('{{ section.id }}', checkedInput.value.toLowerCase().trim());
+    } else {
+      console.log('No checked input found');
     }
+  } else {
+    console.log('variant-selects not found');
   }
   initializeSwiper('{{ section.id }}');
 });
 
 document.addEventListener('shopify:section:load', function (event) {
   if (event.target.querySelector(`#Slider-Gallery-{{ section.id }}`)) {
-    const variantRadios = document.querySelector('variant-radios');
-    if (variantRadios) {
-      const checkedInput = variantRadios.querySelector('input:checked');
+    const variantSelects = document.querySelector('variant-selects');
+    if (variantSelects) {
+      const checkedInput = variantSelects.querySelector('input:checked');
       if (checkedInput) {
-        filterSlidesByColor('{{ section.id }}', checkedInput.value.toLowerCase());
+        filterSlidesByColor('{{ section.id }}', checkedInput.value.toLowerCase().trim());
       }
     }
     initializeSwiper('{{ section.id }}');
