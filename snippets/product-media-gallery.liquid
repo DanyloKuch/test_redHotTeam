@@ -358,10 +358,13 @@
         nextEl: '.swiper-button-next',
         prevEl: '.swiper-button-prev',
       },
+      {% if section.settings.swiper_pagination %}
+    pagination: {
       pagination: {
         el: '.swiper-pagination',
         clickable: true,
       },
+      {% endif %}
     });
   });
 </script>
