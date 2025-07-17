@@ -93,7 +93,11 @@
           {% endif %}
           {%- unless media.id == product.selected_or_first_available_variant.featured_media.id -%}
             {%- assign media_position = media_position | plus: 1 -%}
-            <div class="swiper-slide" data-media-id="{{ section.id }}-{{ media.id }}">
+            <div
+              class="swiper-slide"
+              data-media-id="{{ section.id }}-{{ media.id }}"
+              data-color="{{ media.alt | escape | downcase }}"
+            >
               {% render 'product-thumbnail',
                 media: media,
                 media_count: media_count,
@@ -343,10 +347,18 @@
   }
   .swiper-slide {
     width: 100%; /* Фіксує ширину кожного слайда */
+    display: block;
   }
+  .swiper-slide[style*="display: none"] {
+  width: 0;
+  height: 0;
+  overflow: hidden;
+}
 </style>
 
 <script>
+  
+
     function initializeSwiper(sectionId) {
   var mySwiper = new Swiper(`#Slider-Gallery-${sectionId}`, {
     direction: 'horizontal',
@@ -375,6 +387,48 @@ document.addEventListener('DOMContentLoaded', function () {
 
 document.addEventListener('shopify:section:load', function (event) {
   if (event.target.querySelector(`#Slider-Gallery-{{ section.id }}`)) {
+    initializeSwiper('{{ section.id }}');
+  }
+});
+</script>
+<script>
+  function filterSlidesByColor(sectionId, selectedColor) {
+  const slides = document.querySelectorAll(`#Slider-Gallery-${sectionId} .swiper-slide`);
+  slides.forEach(slide => {
+    slide.style.display = slide.dataset.color === selectedColor ? 'block' : 'none';
+  });
+  // Оновлення Swiper після фільтрації
+  const swiper = document.querySelector(`#Slider-Gallery-${sectionId}`).swiper;
+  if (swiper) {
+    swiper.update();
+  }
+}
+
+document.addEventListener('DOMContentLoaded', function () {
+  const variantRadios = document.querySelector('variant-radios');
+  if (variantRadios) {
+    variantRadios.addEventListener('change', function (event) {
+      const selectedColor = event.target.value.toLowerCase();
+      filterSlidesByColor('{{ section.id }}', selectedColor);
+    });
+    // Фільтрація для початкового варі Married: 2
+    const checkedInput = variantRadios.querySelector('input:checked');
+    if (checkedInput) {
+      filterSlidesByColor('{{ section.id }}', checkedInput.value.toLowerCase());
+    }
+  }
+  initializeSwiper('{{ section.id }}');
+});
+
+document.addEventListener('shopify:section:load', function (event) {
+  if (event.target.querySelector(`#Slider-Gallery-{{ section.id }}`)) {
+    const variantRadios = document.querySelector('variant-radios');
+    if (variantRadios) {
+      const checkedInput = variantRadios.querySelector('input:checked');
+      if (checkedInput) {
+        filterSlidesByColor('{{ section.id }}', checkedInput.value.toLowerCase());
+      }
+    }
     initializeSwiper('{{ section.id }}');
   }
 });
