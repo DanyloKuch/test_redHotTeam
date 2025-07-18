@@ -1513,3 +1513,7 @@ a.product__text {
   .swiper-slide.hidden {
     display: none !important;
   }
+
+  .slider-counter {
+  display: none;
+}
