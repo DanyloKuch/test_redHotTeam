@@ -67,7 +67,7 @@
           <div
             class="swiper-slide"
             data-media-id="{{ section.id }}-{{ featured_media.id }}"
-            data-color="{{ featured_media.alt | escape | downcase }}"
+            data-media-group="{{ featured_media.alt | escape }}"
           >
             {% render 'product-thumbnail',
               media: featured_media,
@@ -100,7 +100,7 @@
             <div
               class="swiper-slide"
               data-media-id="{{ section.id }}-{{ media.id }}"
-              data-color="{{ media.alt | escape | downcase }}"
+              data-media-group="{{ media.alt | escape }}"
             >
               {% render 'product-thumbnail',
                 media: media,
@@ -230,6 +230,7 @@
             class="thumbnail-list__item slider__slide{% if section.settings.hide_variants and variant_images contains featured_media.src %} thumbnail-list_item--variant{% endif %}"
             data-target="{{ section.id }}-{{ featured_media.id }}"
             data-media-position="{{ media_index }}"
+            data-media-group="{{ featured_media.alt | escape }}"
           >
             {%- capture thumbnail_id -%}
               Thumbnail-{{ section.id }}-0
@@ -274,6 +275,7 @@
               class="thumbnail-list__item slider__slide{% if section.settings.hide_variants and variant_images contains media.src %} thumbnail-list_item--variant{% endif %}"
               data-target="{{ section.id }}-{{ media.id }}"
               data-media-position="{{ media_index }}"
+              data-media-group="{{ media.alt | escape }}"
             >
               {%- if media.media_type == 'model' -%}
                 <span class="thumbnail__badge" aria-hidden="true">
@@ -353,10 +355,14 @@
     width: 100%;
     display: block;
   }
-  .swiper-slide[style*='display: none'] {
+  .swiper-slide.hidden {
+    display: none !important;
     width: 0;
     height: 0;
     overflow: hidden;
+  }
+  .hidden {
+    display: none !important;
   }
 </style>
 
@@ -395,58 +401,102 @@
 </script>
 
 <script>
-  function filterSlidesByColor(sectionId, selectedColor) {
-    const slides = document.querySelectorAll(`#Slider-Gallery-${sectionId} .swiper-slide`);
-    let visibleSlides = 0;
-    slides.forEach(slide => {
-      const shouldShow = slide.dataset.color === selectedColor;
-      slide.style.display = shouldShow ? 'block' : 'none';
-      if (shouldShow) visibleSlides++;
-    });
-    const swiper = document.querySelector(`#Slider-Gallery-${sectionId}`).swiper;
-    if (swiper) {
-      swiper.update(); // Оновити Swiper
-      console.log(`Updated to ${selectedColor}, visible slides: ${visibleSlides}`);
-    } else {
-      initializeSwiper(sectionId); // Переініціалізація, якщо потрібно
-    }
-    // Оновити пагінацію вручну, якщо потрібно
-    const counterTotal = document.querySelector(`#GalleryViewer-${sectionId} .slider-counter--total`);
-    if (counterTotal) counterTotal.textContent = visibleSlides;
-  }
+  document.addEventListener("DOMContentLoaded", () => {
+    const mediaGallery = document.querySelector('media-gallery');
+    const productSection = document.querySelector(".product-variant-id");
+    const sectionID = "{{ section.id }}";
 
-  document.addEventListener('DOMContentLoaded', function () {
-    const variantSelects = document.querySelector('variant-selects');
-    if (variantSelects) {
-      console.log('variant-selects found');
-      variantSelects.addEventListener('change', function (event) {
-        const selectedColor = event.target.value.toLowerCase().trim();
-        console.log('Selected color:', selectedColor);
-        filterSlidesByColor('{{ section.id }}', selectedColor);
-      });
-      const checkedInput = variantSelects.querySelector('input:checked');
-      if (checkedInput) {
-        console.log('Initial color:', checkedInput.value);
-        filterSlidesByColor('{{ section.id }}', checkedInput.value.toLowerCase().trim());
-      } else {
-        console.log('No checked input found');
-      }
-    } else {
-      console.log('variant-selects not found');
+    if (!mediaGallery || !productSection) {
+      console.error('Required elements are missing from the DOM.');
+      return;
     }
-    initializeSwiper('{{ section.id }}');
-  });
 
-  document.addEventListener('shopify:section:load', function (event) {
-    if (event.target.querySelector(`#Slider-Gallery-{{ section.id }}`)) {
-      const variantSelects = document.querySelector('variant-selects');
-      if (variantSelects) {
-        const checkedInput = variantSelects.querySelector('input:checked');
-        if (checkedInput) {
-          filterSlidesByColor('{{ section.id }}', checkedInput.value.toLowerCase().trim());
+    const handle = `products/${"{{ product.handle }}"}.js`;
+
+    fetch(`${window.Shopify.routes.root}${handle}`)
+      .then(response => response.json())
+      .then(product => {
+        const optionsToWatch = "{{ settings.selected_option_name }}".split(",");
+        const colorOption = product.options.find(option => optionsToWatch.includes(option.name)) || null;
+
+        if (!colorOption) {
+          console.warn("No relevant options available for this product.");
+          return;
         }
-      }
-      initializeSwiper('{{ section.id }}');
-    }
+
+        const colorValues = colorOption.values;
+        const colorImagePositions = {};
+
+        colorValues.forEach(color => {
+          const variant = product.variants.find(variant => variant.options[colorOption.position - 1] === color);
+
+          if (variant && variant.featured_image) {
+            colorImagePositions[color] = variant.featured_image.position;
+          }
+        });
+
+        const sortedColors = Object.entries(colorImagePositions).sort((a, b) => a[1] - b[1]);
+        const colorImageRanges = {};
+
+        sortedColors.forEach((color, index) => {
+          const colorName = color[0];
+          const startPos = color[1];
+          const endPos = sortedColors[index + 1] ? sortedColors[index + 1][1] : null;
+
+          colorImageRanges[colorName] = endPos ? [startPos, endPos] : [startPos];
+        });
+
+        const colorImageIDs = {};
+        Object.entries(colorImageRanges).forEach(([color, range]) => {
+          const startPos = range[0];
+          const endPos = range[1] || product.media.length + 1;
+
+          const imageIDs = product.media
+            .filter((media, index) => {
+              const imagePosition = index + 1;
+              return imagePosition >= startPos && imagePosition < endPos;
+            })
+            .map(media => media.id);
+
+          colorImageIDs[color] = imageIDs;
+        });
+
+        Object.entries(colorImageIDs).forEach(([color, imageIDs]) => {
+          imageIDs.forEach(mediaID => {
+            const selector = `[data-media-id="${sectionID}-${mediaID}"], [data-target="${sectionID}-${mediaID}"]`;
+            const mediaItems = mediaGallery.querySelectorAll(`div${selector}, li${selector}`);
+
+            mediaItems.forEach(mediaItem => {
+              mediaItem.setAttribute('data-media-group', color);
+            });
+          });
+        });
+
+        const showVariantImage = () => {
+          const variantSelects = document.querySelector('variant-selects');
+          const currentValues = Array.from(
+            variantSelects.querySelectorAll('select option[selected], fieldset input:checked')
+          ).map(el => el.value);
+
+          const selectedColor = currentValues.find(value => colorImageRanges.hasOwnProperty(value));
+
+          mediaGallery.querySelectorAll('div[data-media-group], li[data-media-group]').forEach(mediaItem => {
+            if (mediaItem.getAttribute('data-media-group') === selectedColor) {
+              mediaItem.classList.remove('hidden');
+            } else {
+              mediaItem.classList.add('hidden');
+            }
+          });
+
+          const swiper = document.querySelector(`#Slider-Gallery-${sectionID}`).swiper;
+          if (swiper) {
+            swiper.update();
+          }
+        };
+
+        showVariantImage();
+        productSection.addEventListener('change', showVariantImage);
+      })
+      .catch(error => console.error("Error fetching product data:", error));
   });
 </script>
