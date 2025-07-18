@@ -340,17 +340,17 @@
   .swiper-button-next {
     display: block !important;
     opacity: 1 !important;
-    color: #000; /* Зміни колір стрілок за потреби */
+    color: #000;
     width: 40px;
     height: 40px;
     z-index: 10;
   }
 
   .swiper {
-    width: 100%; /* Забезпечує коректну ширину контейнера */
+    width: 100%;
   }
   .swiper-slide {
-    width: 100%; /* Фіксує ширину кожного слайда */
+    width: 100%;
     display: block;
   }
   .swiper-slide[style*='display: none'] {
@@ -361,92 +361,92 @@
 </style>
 
 <script>
-  
-
-    function initializeSwiper(sectionId) {
-  var mySwiper = new Swiper(`#Slider-Gallery-${sectionId}`, {
-    direction: 'horizontal',
-    loop: false,
-    slidesPerView: {{ section.settings.slides_per_view }},
-    spaceBetween: {{ section.settings.space_between_slides }},
-    watchOverflow: true,
-    {% if section.settings.swiper_arrow %}
-    navigation: {
-      nextEl: '.swiper-button-next',
-      prevEl: '.swiper-button-prev',
-    },
-    {% endif %}
-    {% if section.settings.swiper_pagination %}
-    pagination: {
-      el: '.swiper-pagination',
-      clickable: true,
-    },
-    {% endif %}
-  });
-}
-
-document.addEventListener('DOMContentLoaded', function () {
-  initializeSwiper('{{ section.id }}');
-});
-
-document.addEventListener('shopify:section:load', function (event) {
-  if (event.target.querySelector(`#Slider-Gallery-{{ section.id }}`)) {
-    initializeSwiper('{{ section.id }}');
+  function initializeSwiper(sectionId) {
+    var mySwiper = new Swiper(`#Slider-Gallery-${sectionId}`, {
+      direction: 'horizontal',
+      loop: false,
+      slidesPerView: {{ section.settings.slides_per_view }},
+      spaceBetween: {{ section.settings.space_between_slides }},
+      watchOverflow: true,
+      {% if section.settings.swiper_arrow %}
+      navigation: {
+        nextEl: '.swiper-button-next',
+        prevEl: '.swiper-button-prev',
+      },
+      {% endif %}
+      {% if section.settings.swiper_pagination %}
+      pagination: {
+        el: '.swiper-pagination',
+        clickable: true,
+      },
+      {% endif %}
+    });
   }
-});
+
+  document.addEventListener('DOMContentLoaded', function () {
+    initializeSwiper('{{ section.id }}');
+  });
+
+  document.addEventListener('shopify:section:load', function (event) {
+    if (event.target.querySelector(`#Slider-Gallery-{{ section.id }}`)) {
+      initializeSwiper('{{ section.id }}');
+    }
+  });
 </script>
 
 <script>
   function filterSlidesByColor(sectionId, selectedColor) {
-  const slides = document.querySelectorAll(`#Slider-Gallery-${sectionId} .swiper-slide`);
-  slides.forEach(slide => {
-    slide.style.display = slide.dataset.color === selectedColor ? 'block' : 'none';
-  });
-  const swiper = document.querySelector(`#Slider-Gallery-${sectionId}`).swiper;
-  if (swiper) {
-    swiper.update(); // Оновити Swiper замість знищення
-  } else {
-    initializeSwiper(sectionId); // Ініціалізувати, якщо ще не створено
-  }
-}
-
-document.addEventListener('DOMContentLoaded', function () {
-  const variantSelects = document.querySelector('variant-selects');
-  if (variantSelects) {
-    console.log('variant-selects found');
-    variantSelects.addEventListener('change', function (event) {
-      const selectedColor = event.target.value.toLowerCase().trim();
-      console.log('Selected color:', selectedColor);
-      filterSlidesByColor('{{ section.id }}', selectedColor);
+    const slides = document.querySelectorAll(`#Slider-Gallery-${sectionId} .swiper-slide`);
+    let visibleSlides = 0;
+    slides.forEach(slide => {
+      const shouldShow = slide.dataset.color === selectedColor;
+      slide.style.display = shouldShow ? 'block' : 'none';
+      if (shouldShow) visibleSlides++;
     });
-    const checkedInput = variantSelects.querySelector('input:checked');
-    if (checkedInput) {
-      console.log('Initial color:', checkedInput.value);
-      filterSlidesByColor('{{ section.id }}', checkedInput.value.toLowerCase().trim());
+    const swiper = document.querySelector(`#Slider-Gallery-${sectionId}`).swiper;
+    if (swiper) {
+      swiper.update(); // Оновити Swiper
+      console.log(`Updated to ${selectedColor}, visible slides: ${visibleSlides}`);
     } else {
-      console.log('No checked input found');
+      initializeSwiper(sectionId); // Переініціалізація, якщо потрібно
     }
-  } else {
-    console.log('variant-selects not found');
+    // Оновити пагінацію вручну, якщо потрібно
+    const counterTotal = document.querySelector(`#GalleryViewer-${sectionId} .slider-counter--total`);
+    if (counterTotal) counterTotal.textContent = visibleSlides;
   }
-  // Ініціалізація Swiper після фільтрації
-  const checkedInput = variantSelects ? variantSelects.querySelector('input:checked') : null;
-  if (checkedInput) {
-    filterSlidesByColor('{{ section.id }}', checkedInput.value.toLowerCase().trim());
-  }
-  initializeSwiper('{{ section.id }}');
-});
 
-document.addEventListener('shopify:section:load', function (event) {
-  if (event.target.querySelector(`#Slider-Gallery-{{ section.id }}`)) {
+  document.addEventListener('DOMContentLoaded', function () {
     const variantSelects = document.querySelector('variant-selects');
     if (variantSelects) {
+      console.log('variant-selects found');
+      variantSelects.addEventListener('change', function (event) {
+        const selectedColor = event.target.value.toLowerCase().trim();
+        console.log('Selected color:', selectedColor);
+        filterSlidesByColor('{{ section.id }}', selectedColor);
+      });
       const checkedInput = variantSelects.querySelector('input:checked');
       if (checkedInput) {
+        console.log('Initial color:', checkedInput.value);
         filterSlidesByColor('{{ section.id }}', checkedInput.value.toLowerCase().trim());
+      } else {
+        console.log('No checked input found');
       }
+    } else {
+      console.log('variant-selects not found');
     }
     initializeSwiper('{{ section.id }}');
-  }
-});
+  });
+
+  document.addEventListener('shopify:section:load', function (event) {
+    if (event.target.querySelector(`#Slider-Gallery-{{ section.id }}`)) {
+      const variantSelects = document.querySelector('variant-selects');
+      if (variantSelects) {
+        const checkedInput = variantSelects.querySelector('input:checked');
+        if (checkedInput) {
+          filterSlidesByColor('{{ section.id }}', checkedInput.value.toLowerCase().trim());
+        }
+      }
+      initializeSwiper('{{ section.id }}');
+    }
+  });
 </script>
