@@ -490,7 +490,10 @@
 
           const swiper = document.querySelector(`#Slider-Gallery-${sectionID}`).swiper;
           if (swiper) {
-            swiper.update();
+            const visibleSlides = mediaGallery.querySelectorAll(`div[data-media-group="${selectedColor}"]:not(.hidden)`);
+            console.log(`Колір: ${selectedColor}, Кількість видимих слайдів: ${visibleSlides.length}`);
+            swiper.destroy(); // Видаляємо старий екземпляр
+            initializeSwiper(sectionID); // Переініціалізація Swiper
           }
         };
 
