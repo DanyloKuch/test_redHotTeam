@@ -1,7 +1,7 @@
 {% if product.metafields.custom.selected_variant == true or product.metafields.custom.selected_variant == null %}
 <style>
   .hidden {
-    display: none;
+    display: none !important; /* Додаємо !important для надійності */
   }
 </style>
 
@@ -11,7 +11,6 @@
     const productSection = document.querySelector(".product-variant-id");
     const sectionID = "{{ section.id }}";
 
-    // Ensure required elements are available
     if (!mediaGallery || !productSection) {
       console.error('Required elements are missing from the DOM.');
       return;
@@ -33,7 +32,7 @@
         const colorValues = colorOption.values;
         const colorImagePositions = {};
 
-        // Map colors to their starting image positions
+        // Мапимо кольори до їхніх початкових позицій зображень
         colorValues.forEach(color => {
           const variant = product.variants.find(variant => variant.options[colorOption.position - 1] === color);
 
@@ -42,7 +41,7 @@
           }
         });
 
-        // Sort colors by starting image position
+        // Сортуємо кольори за початковими позиціями
         const sortedColors = Object.entries(colorImagePositions).sort((a, b) => a[1] - b[1]);
         const colorImageRanges = {};
 
@@ -54,27 +53,27 @@
           colorImageRanges[colorName] = endPos ? [startPos, endPos] : [startPos];
         });
 
-        // Group image IDs by color based on image ranges
+        // Групуємо ID зображень за кольорами
         const colorImageIDs = {};
         Object.entries(colorImageRanges).forEach(([color, range]) => {
           const startPos = range[0];
-          const endPos = range[1] || product.media.length + 1; // If no end position, use the end of the media list
-          
+          const endPos = range[1] || product.media.length + 1;
+
           const imageIDs = product.media
             .filter((media, index) => {
-              const imagePosition = index + 1; // Adjust index to be position-based
-              return imagePosition >= startPos && imagePosition < endPos;
+              const imagePosition = index + 1;
+              return imagePosition >= startPos && imagePosition <= endPos; // Змінили < на <=
             })
             .map(media => media.id);
 
           colorImageIDs[color] = imageIDs;
         });
 
-        // Apply data-media-group attributes to images
+        // Додаємо атрибути data-media-group до елементів
         Object.entries(colorImageIDs).forEach(([color, imageIDs]) => {
           imageIDs.forEach(mediaID => {
             const selector = `[data-media-id="${sectionID}-${mediaID}"], [data-target="${sectionID}-${mediaID}"]`;
-            const mediaItems = mediaGallery.querySelectorAll(`li${selector}`);
+            const mediaItems = mediaGallery.querySelectorAll(`div${selector}, li${selector}`);
 
             mediaItems.forEach(mediaItem => {
               mediaItem.setAttribute('data-media-group', color);
@@ -84,16 +83,20 @@
 
         const showVariantImage = () => {
           const variantSelects = document.querySelector('variant-selects');
+          let selectedColor = null;
 
-          // Get the selected color
-          const currentValues = Array.from(
-            variantSelects.querySelectorAll('select option[selected], fieldset input:checked')
-          ).map(el => el.value);
+          // Отримуємо вибраний колір або перший за замовчуванням
+          if (variantSelects) {
+            const currentValues = Array.from(
+              variantSelects.querySelectorAll('select option[selected], fieldset input:checked')
+            ).map(el => el.value);
+            selectedColor = currentValues.find(value => colorImageRanges.hasOwnProperty(value)) || Object.keys(colorImageRanges)[0];
+          } else {
+            selectedColor = Object.keys(colorImageRanges)[0]; // Перший колір за замовчуванням
+          }
 
-          const selectedColor = currentValues.find(value => colorImageRanges.hasOwnProperty(value));
-
-          // Show/hide images based on the selected color
-          mediaGallery.querySelectorAll('ul li[data-media-group]').forEach(mediaItem => {
+          // Показуємо/ховаємо зображення на основі вибраного кольору
+          mediaGallery.querySelectorAll('div[data-media-group], li[data-media-group]').forEach(mediaItem => {
             if (mediaItem.getAttribute('data-media-group') === selectedColor) {
               mediaItem.classList.remove('hidden');
             } else {
@@ -101,18 +104,22 @@
             }
           });
 
-          // Reinitialize slider if necessary
-          mediaGallery.querySelectorAll('slider-component').forEach(slider => {
-            if (typeof slider.initPages === 'function') {
-              slider.initPages();
-            }
-          });
+          // Оновлюємо Swiper
+          const swiper = document.querySelector(`#Slider-Gallery-${sectionID}`).swiper;
+          if (swiper) {
+            swiper.destroy(true, true); // Повне знищення Swiper
+            initializeSwiper(sectionID); // Повторна ініціалізація
+          }
+
+          // Логування для дебагу
+          const visibleSlides = mediaGallery.querySelectorAll(`div[data-media-group="${selectedColor}"]:not(.hidden), li[data-media-group="${selectedColor}"]:not(.hidden)`);
+          console.log(`Вибраний колір: ${selectedColor}, Кількість видимих зображень: ${visibleSlides.length}`);
         };
 
-        // Initial display setup
+        // Початкове відображення
         showVariantImage();
 
-        // Update images when a new variant is selected
+        // Оновлення при зміні варіанту
         productSection.addEventListener('change', showVariantImage);
       })
       .catch(error => console.error("Error fetching product data:", error));
@@ -2366,7 +2373,7 @@
       "min": 1,
       "max": 3,
       "step": 1,
-      "default": 3,
+      "default": 1,
       "label": "Slides per view"
     },
     {
