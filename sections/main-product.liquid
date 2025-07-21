@@ -340,9 +340,13 @@
                         <button class="accordion-title">{{ parts[0] | strip }}</button>
                         <div class="accordion-content">{{ parts[1] | strip }}</div>
                       </div>
+                    {% else %}
+                      <div style="border: 1px solid yellow;">Debug: Invalid format: {{ item }}</div>
                     {% endif %}
                   {% endfor %}
                 </div>
+              {% else %}
+                <div style="border: 1px solid red;">Debug: No accordion items</div>
               {% endif %}
               {%- when 'sku' -%}
                 <p
