@@ -334,12 +334,14 @@
                 <div class="accordion" data-multiple="{{ product.metafields.custom.accordion_multiple }}">
                   {% assign raw_items = product.metafields.custom.accordion_items | first %}
                   <div style="border: 1px solid green;">Debug: Raw items = {{ raw_items | json }}</div>
+                  <div style="border: 1px solid cyan;">
+                    Debug: Full metafield = {{ product.metafields.custom.accordion_items | json }}
+                  </div>
+                  <!-- Новий дебаг -->
                   {% if raw_items != blank %}
                     {% assign items = raw_items | split: '|' %}
                     {% for item in items %}
-                      <div style="border: 1px solid blue;">Debug: Item = {{ item | json }}</div>
                       {% assign parts = item | strip | split: ':' %}
-                      <div style="border: 1px solid purple;">Debug: Parts = {{ parts | json }}</div>
                       {% if parts.size == 2 %}
                         <div class="accordion-item">
                           <button class="accordion-title">{{ parts[0] | strip }}</button>
