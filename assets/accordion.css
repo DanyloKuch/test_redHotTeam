@@ -1,0 +1,37 @@
+.accordion {
+  max-width: 600px;
+  margin: 20px auto;
+  font-family: Arial, sans-serif;
+}
+
+.accordion-item {
+  border-bottom: 1px solid #e0e0e0;
+}
+
+.accordion-title {
+  width: 100%;
+  padding: 15px;
+  background: #f8f8f8;
+  border: none;
+  text-align: left;
+  font-size: 16px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: background 0.3s ease;
+}
+
+.accordion-title:hover {
+  background: #e8e8e8;
+}
+
+.accordion-content {
+  display: none;
+  padding: 15px;
+  font-size: 14px;
+  line-height: 1.5;
+  background: #fff;
+}
+
+.accordion-content.active {
+  display: block;
+}

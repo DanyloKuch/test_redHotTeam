@@ -305,6 +305,11 @@
     {% if template == 'product' %}
       <script src="https://cdn.jsdelivr.net/npm/swiper@10/swiper-bundle.min.js" defer></script>
     {% endif %}
+
+    {% if template == 'product' %}
+      <link rel="stylesheet" href="{{ 'accordion.css' | asset_url }}" media="print" onload="this.media='all'">
+      <script src="{{ 'accordion.js' | asset_url }}" defer="defer"></script>
+    {% endif %}
   </head>
 
   <body class="gradient{% if settings.animations_hover_elements != 'none' %} animate--hover-{{ settings.animations_hover_elements }}{% endif %}">
