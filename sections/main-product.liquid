@@ -329,15 +329,14 @@
                   <div class="product__description rte quick-add-hidden" {{ block.shopify_attributes }}>
                     {{ product.description }}
                   </div>
-                {%- endif -%}
+              {%- endif -%}
               {% if product.metafields.custom.accordion_items != blank %}
                 <div class="accordion" data-multiple="{{ product.metafields.custom.accordion_multiple }}">
-                  {% assign raw_items = product.metafields.custom.accordion_items | first %}
+                  {% assign raw_items = product.metafields.custom.accordion_items %}
                   <div style="border: 1px solid green;">Debug: Raw items = {{ raw_items | json }}</div>
                   <div style="border: 1px solid cyan;">
                     Debug: Full metafield = {{ product.metafields.custom.accordion_items | json }}
                   </div>
-                  <!-- Новий дебаг -->
                   {% if raw_items != blank %}
                     {% assign items = raw_items | split: '|' %}
                     {% for item in items %}
