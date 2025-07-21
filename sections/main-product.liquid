@@ -332,18 +332,28 @@
                 {%- endif -%}
               {% if product.metafields.custom.accordion_items != blank %}
                 <div class="accordion" data-multiple="{{ product.metafields.custom.accordion_multiple }}">
-                  {% assign all_items = product.metafields.custom.accordion_items | first | split: '|' %}
-                  {% for item in all_items %}
-                    {% assign parts = item | strip | split: ':' %}
-                    {% if parts.size == 2 %}
-                      <div class="accordion-item">
-                        <button class="accordion-title">{{ parts[0] | strip }}</button>
-                        <div class="accordion-content">{{ parts[1] | strip }}</div>
-                      </div>
-                    {% else %}
-                      <div style="border: 1px solid yellow;">Debug: Invalid format: {{ item }}</div>
-                    {% endif %}
-                  {% endfor %}
+                  {% assign raw_items = product.metafields.custom.accordion_items | first %}
+                  <div style="border: 1px solid green;">Debug: Raw items = {{ raw_items | json }}</div>
+                  {% if raw_items != blank %}
+                    {% assign items = raw_items | split: '|' %}
+                    {% for item in items %}
+                      <div style="border: 1px solid blue;">Debug: Item = {{ item | json }}</div>
+                      {% assign parts = item | strip | split: ':' %}
+                      <div style="border: 1px solid purple;">Debug: Parts = {{ parts | json }}</div>
+                      {% if parts.size == 2 %}
+                        <div class="accordion-item">
+                          <button class="accordion-title">{{ parts[0] | strip }}</button>
+                          <div class="accordion-content">{{ parts[1] | strip }}</div>
+                        </div>
+                      {% else %}
+                        <div style="border: 1px solid yellow;">
+                          Debug: Invalid format: {{ item }} (Parts: {{ parts.size }})
+                        </div>
+                      {% endif %}
+                    {% endfor %}
+                  {% else %}
+                    <div style="border: 1px solid orange;">Debug: No raw items</div>
+                  {% endif %}
                 </div>
               {% else %}
                 <div style="border: 1px solid red;">Debug: No accordion items</div>
