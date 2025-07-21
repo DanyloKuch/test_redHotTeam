@@ -332,17 +332,21 @@
                 {%- endif -%}
               {% if product.metafields.custom.accordion_items != blank %}
                 <div class="accordion" data-multiple="{{ product.metafields.custom.accordion_multiple }}">
-                  {% assign items = product.metafields.custom.accordion_items %}
-                  {% for item in items %}
-                    {% assign parts = item | split: ':' %}
+                  {% assign all_items = product.metafields.custom.accordion_items | first | split: '|' %}
+                  {% for item in all_items %}
+                    {% assign parts = item | strip | split: ':' %}
                     {% if parts.size == 2 %}
                       <div class="accordion-item">
                         <button class="accordion-title">{{ parts[0] | strip }}</button>
                         <div class="accordion-content">{{ parts[1] | strip }}</div>
                       </div>
-                     {% endif %}
-                   {% endfor %}
-                 </div>
+                    {% else %}
+                      <div style="border: 1px solid yellow;">Debug: Invalid format: {{ item }}</div>
+                    {% endif %}
+                  {% endfor %}
+                </div>
+              {% else %}
+                  <div style="border: 1px solid red;">Debug: No accordion items</div>
               {% endif %}
               {%- when 'sku' -%}
                 <p
