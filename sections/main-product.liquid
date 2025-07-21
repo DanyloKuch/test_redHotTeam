@@ -1,130 +1,134 @@
 {% if product.metafields.custom.selected_variant == true or product.metafields.custom.selected_variant == null %}
-<style>
-  .hidden {
-    display: none !important; /* Додаємо !important для надійності */
-  }
-</style>
-
-<script>
-  document.addEventListener("DOMContentLoaded", () => {
-    const mediaGallery = document.querySelector('media-gallery');
-    const productSection = document.querySelector(".product-variant-id");
-    const sectionID = "{{ section.id }}";
-
-    if (!mediaGallery || !productSection) {
-      console.error('Required elements are missing from the DOM.');
-      return;
+  <style>
+    .hidden {
+      display: none !important; /* Додаємо !important для надійності */
     }
+  </style>
 
-    const handle = `products/${"{{ product.handle }}"}.js`;
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      const mediaGallery = document.querySelector('media-gallery');
+      const productSection = document.querySelector('.product-variant-id');
+      const sectionID = '{{ section.id }}';
 
-    fetch(`${window.Shopify.routes.root}${handle}`)
-      .then(response => response.json())
-      .then(product => {
-        const optionsToWatch = "{{ settings.selected_option_name }}".split(",");
-        const colorOption = product.options.find(option => optionsToWatch.includes(option.name)) || null;
+      if (!mediaGallery || !productSection) {
+        console.error('Required elements are missing from the DOM.');
+        return;
+      }
 
-        if (!colorOption) {
-          console.warn("No relevant options available for this product.");
-          return;
-        }
+      const handle = `products/${'{{ product.handle }}'}.js`;
 
-        const colorValues = colorOption.values;
-        const colorImagePositions = {};
+      fetch(`${window.Shopify.routes.root}${handle}`)
+        .then((response) => response.json())
+        .then((product) => {
+          const optionsToWatch = '{{ settings.selected_option_name }}'.split(',');
+          const colorOption = product.options.find((option) => optionsToWatch.includes(option.name)) || null;
 
-        // Мапимо кольори до їхніх початкових позицій зображень
-        colorValues.forEach(color => {
-          const variant = product.variants.find(variant => variant.options[colorOption.position - 1] === color);
-
-          if (variant && variant.featured_image) {
-            colorImagePositions[color] = variant.featured_image.position;
-          }
-        });
-
-        // Сортуємо кольори за початковими позиціями
-        const sortedColors = Object.entries(colorImagePositions).sort((a, b) => a[1] - b[1]);
-        const colorImageRanges = {};
-
-        sortedColors.forEach((color, index) => {
-          const colorName = color[0];
-          const startPos = color[1];
-          const endPos = sortedColors[index + 1] ? sortedColors[index + 1][1] : null;
-
-          colorImageRanges[colorName] = endPos ? [startPos, endPos] : [startPos];
-        });
-
-        // Групуємо ID зображень за кольорами
-        const colorImageIDs = {};
-        Object.entries(colorImageRanges).forEach(([color, range]) => {
-          const startPos = range[0];
-          const endPos = range[1] || product.media.length + 1;
-
-          const imageIDs = product.media
-            .filter((media, index) => {
-              const imagePosition = index + 1;
-              return imagePosition >= startPos && imagePosition <= endPos; // Змінили < на <=
-            })
-            .map(media => media.id);
-
-          colorImageIDs[color] = imageIDs;
-        });
-
-        // Додаємо атрибути data-media-group до елементів
-        Object.entries(colorImageIDs).forEach(([color, imageIDs]) => {
-          imageIDs.forEach(mediaID => {
-            const selector = `[data-media-id="${sectionID}-${mediaID}"], [data-target="${sectionID}-${mediaID}"]`;
-            const mediaItems = mediaGallery.querySelectorAll(`div${selector}, li${selector}`);
-
-            mediaItems.forEach(mediaItem => {
-              mediaItem.setAttribute('data-media-group', color);
-            });
-          });
-        });
-
-        const showVariantImage = () => {
-          const variantSelects = document.querySelector('variant-selects');
-          let selectedColor = null;
-
-          // Отримуємо вибраний колір або перший за замовчуванням
-          if (variantSelects) {
-            const currentValues = Array.from(
-              variantSelects.querySelectorAll('select option[selected], fieldset input:checked')
-            ).map(el => el.value);
-            selectedColor = currentValues.find(value => colorImageRanges.hasOwnProperty(value)) || Object.keys(colorImageRanges)[0];
-          } else {
-            selectedColor = Object.keys(colorImageRanges)[0]; // Перший колір за замовчуванням
+          if (!colorOption) {
+            console.warn('No relevant options available for this product.');
+            return;
           }
 
-          // Показуємо/ховаємо зображення на основі вибраного кольору
-          mediaGallery.querySelectorAll('div[data-media-group], li[data-media-group]').forEach(mediaItem => {
-            if (mediaItem.getAttribute('data-media-group') === selectedColor) {
-              mediaItem.classList.remove('hidden');
-            } else {
-              mediaItem.classList.add('hidden');
+          const colorValues = colorOption.values;
+          const colorImagePositions = {};
+
+          // Мапимо кольори до їхніх початкових позицій зображень
+          colorValues.forEach((color) => {
+            const variant = product.variants.find((variant) => variant.options[colorOption.position - 1] === color);
+
+            if (variant && variant.featured_image) {
+              colorImagePositions[color] = variant.featured_image.position;
             }
           });
 
-          // Оновлюємо Swiper
-          const swiper = document.querySelector(`#Slider-Gallery-${sectionID}`).swiper;
-          if (swiper) {
-            swiper.destroy(true, true); // Повне знищення Swiper
-            initializeSwiper(sectionID); // Повторна ініціалізація
-          }
+          // Сортуємо кольори за початковими позиціями
+          const sortedColors = Object.entries(colorImagePositions).sort((a, b) => a[1] - b[1]);
+          const colorImageRanges = {};
 
-          // Логування для дебагу
-          const visibleSlides = mediaGallery.querySelectorAll(`div[data-media-group="${selectedColor}"]:not(.hidden), li[data-media-group="${selectedColor}"]:not(.hidden)`);
-          console.log(`Вибраний колір: ${selectedColor}, Кількість видимих зображень: ${visibleSlides.length}`);
-        };
+          sortedColors.forEach((color, index) => {
+            const colorName = color[0];
+            const startPos = color[1];
+            const endPos = sortedColors[index + 1] ? sortedColors[index + 1][1] : null;
 
-        // Початкове відображення
-        showVariantImage();
+            colorImageRanges[colorName] = endPos ? [startPos, endPos] : [startPos];
+          });
 
-        // Оновлення при зміні варіанту
-        productSection.addEventListener('change', showVariantImage);
-      })
-      .catch(error => console.error("Error fetching product data:", error));
-  });
-</script>
+          // Групуємо ID зображень за кольорами
+          const colorImageIDs = {};
+          Object.entries(colorImageRanges).forEach(([color, range]) => {
+            const startPos = range[0];
+            const endPos = range[1] || product.media.length + 1;
+
+            const imageIDs = product.media
+              .filter((media, index) => {
+                const imagePosition = index + 1;
+                return imagePosition >= startPos && imagePosition <= endPos; // Змінили < на <=
+              })
+              .map((media) => media.id);
+
+            colorImageIDs[color] = imageIDs;
+          });
+
+          // Додаємо атрибути data-media-group до елементів
+          Object.entries(colorImageIDs).forEach(([color, imageIDs]) => {
+            imageIDs.forEach((mediaID) => {
+              const selector = `[data-media-id="${sectionID}-${mediaID}"], [data-target="${sectionID}-${mediaID}"]`;
+              const mediaItems = mediaGallery.querySelectorAll(`div${selector}, li${selector}`);
+
+              mediaItems.forEach((mediaItem) => {
+                mediaItem.setAttribute('data-media-group', color);
+              });
+            });
+          });
+
+          const showVariantImage = () => {
+            const variantSelects = document.querySelector('variant-selects');
+            let selectedColor = null;
+
+            // Отримуємо вибраний колір або перший за замовчуванням
+            if (variantSelects) {
+              const currentValues = Array.from(
+                variantSelects.querySelectorAll('select option[selected], fieldset input:checked')
+              ).map((el) => el.value);
+              selectedColor =
+                currentValues.find((value) => colorImageRanges.hasOwnProperty(value)) ||
+                Object.keys(colorImageRanges)[0];
+            } else {
+              selectedColor = Object.keys(colorImageRanges)[0]; // Перший колір за замовчуванням
+            }
+
+            // Показуємо/ховаємо зображення на основі вибраного кольору
+            mediaGallery.querySelectorAll('div[data-media-group], li[data-media-group]').forEach((mediaItem) => {
+              if (mediaItem.getAttribute('data-media-group') === selectedColor) {
+                mediaItem.classList.remove('hidden');
+              } else {
+                mediaItem.classList.add('hidden');
+              }
+            });
+
+            // Оновлюємо Swiper
+            const swiper = document.querySelector(`#Slider-Gallery-${sectionID}`).swiper;
+            if (swiper) {
+              swiper.destroy(true, true); // Повне знищення Swiper
+              initializeSwiper(sectionID); // Повторна ініціалізація
+            }
+
+            // Логування для дебагу
+            const visibleSlides = mediaGallery.querySelectorAll(
+              `div[data-media-group="${selectedColor}"]:not(.hidden), li[data-media-group="${selectedColor}"]:not(.hidden)`
+            );
+            console.log(`Вибраний колір: ${selectedColor}, Кількість видимих зображень: ${visibleSlides.length}`);
+          };
+
+          // Початкове відображення
+          showVariantImage();
+
+          // Оновлення при зміні варіанту
+          productSection.addEventListener('change', showVariantImage);
+        })
+        .catch((error) => console.error('Error fetching product data:', error));
+    });
+  </script>
 {% endif %}
 
 <product-info
@@ -326,6 +330,20 @@
                     {{ product.description }}
                   </div>
                 {%- endif -%}
+              {% if product.metafields.custom.accordion_items != blank %}
+                <div class="accordion" data-multiple="{{ product.metafields.custom.accordion_multiple }}">
+                  {% assign items = product.metafields.custom.accordion_items %}
+                  {% for item in items %}
+                    {% assign parts = item | split: ':' %}
+                    {% if parts.size == 2 %}
+                      <div class="accordion-item">
+                        <button class="accordion-title">{{ parts[0] | strip }}</button>
+                        <div class="accordion-content">{{ parts[1] | strip }}</div>
+                      </div>
+                     {% endif %}
+                   {% endfor %}
+                 </div>
+              {% endif %}
               {%- when 'sku' -%}
                 <p
                   class="product__sku{% if block.settings.text_style == 'uppercase' %} caption-with-letter-spacing{% elsif block.settings.text_style == 'subtitle' %} subtitle{% endif %}{% if product.selected_or_first_available_variant.sku.size == 0 %} visibility-hidden{% endif %}"
@@ -485,7 +503,10 @@
                                 </dt>
                                 <dd>
                                   <span class="price-per-item--current">
-                                    {{- 'products.product.volume_pricing.price_at_each_html' | t: price: variant_price -}}
+                                    {{-
+                                      'products.product.volume_pricing.price_at_each_html'
+                                      | t: price: variant_price
+                                    -}}
                                   </span>
                                 </dd>
                               </dl>
@@ -850,7 +871,6 @@
     <script type="application/ld+json">
       {{ product | structured_data }}
     </script>
-
   </div>
 </product-info>
 
@@ -1804,7 +1824,7 @@
         {
           "type": "header",
           "content": "t:sections.main-product.blocks.icon_with_text.settings.pairing_2.label"
-        },        
+        },
         {
           "type": "select",
           "id": "icon_2",
@@ -2004,7 +2024,7 @@
         {
           "type": "header",
           "content": "t:sections.main-product.blocks.icon_with_text.settings.pairing_3.label"
-        },        
+        },
         {
           "type": "select",
           "id": "icon_3",
@@ -2306,7 +2326,7 @@
       ],
       "default": "hide",
       "label": "t:sections.main-product.settings.mobile_thumbnails.label"
-    },    
+    },
     {
       "type": "select",
       "id": "media_position",
@@ -2356,16 +2376,16 @@
       "label": "t:sections.main-product.settings.enable_video_looping.label"
     },
     {
-    "type": "checkbox",
-    "id": "swiper_pagination",
-    "default": true,
-    "label": "Display pagination"
+      "type": "checkbox",
+      "id": "swiper_pagination",
+      "default": true,
+      "label": "Display pagination"
     },
     {
-    "type": "checkbox",
-    "id": "swiper_arrow",
-    "default": true,
-    "label": "Display arrow"
+      "type": "checkbox",
+      "id": "swiper_arrow",
+      "default": true,
+      "label": "Display arrow"
     },
     {
       "type": "range",
@@ -2378,13 +2398,13 @@
     },
     {
       "type": "range",
-     "id": "space_between_slides",
-     "min": 0,
-     "max": 30,
-     "step": 5,
-     "default": 10,
-     "label": "Space between slides",
-     "unit": "px"
+      "id": "space_between_slides",
+      "min": 0,
+      "max": 30,
+      "step": 5,
+      "default": 10,
+      "label": "Space between slides",
+      "unit": "px"
     },
     {
       "type": "header",
