@@ -333,31 +333,19 @@
               {% if product.metafields.custom.accordion_items != blank %}
                 <div class="accordion" data-multiple="{{ product.metafields.custom.accordion_multiple }}">
                   {% assign raw_items = product.metafields.custom.accordion_items %}
-                  <div style="border: 1px solid green;">Debug: Raw items = {{ raw_items | json }}</div>
-                  <div style="border: 1px solid cyan;">
-                    Debug: Full metafield = {{ product.metafields.custom.accordion_items | json }}
-                  </div>
                   {% if raw_items != blank %}
                     {% assign items = raw_items | split: '|' %}
                     {% for item in items %}
                       {% assign parts = item | strip | split: ':' %}
                       {% if parts.size == 2 %}
                         <div class="accordion-item">
-                          <button class="accordion-title">{{ parts[0] | strip }}</button>
+                          <button class="accordion-title">{{ parts[0] | strip }} <span class="accordion-arrow">▼</span> </button>
                           <div class="accordion-content">{{ parts[1] | strip }}</div>
-                        </div>
-                      {% else %}
-                        <div style="border: 1px solid yellow;">
-                          Debug: Invalid format: {{ item }} (Parts: {{ parts.size }})
                         </div>
                       {% endif %}
                     {% endfor %}
-                  {% else %}
-                    <div style="border: 1px solid orange;">Debug: No raw items</div>
                   {% endif %}
                 </div>
-              {% else %}
-                <div style="border: 1px solid red;">Debug: No accordion items</div>
               {% endif %}
               {%- when 'sku' -%}
                 <p

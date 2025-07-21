@@ -8,18 +8,19 @@ document.addEventListener('DOMContentLoaded', () => {
   items.forEach(item => {
     const title = item.querySelector('.accordion-title');
     const content = item.querySelector('.accordion-content');
+    const arrow = title.querySelector('.accordion-arrow');
 
     title.addEventListener('click', () => {
       if (!isMultiple) {
-        // Закриваємо всі інші секції, якщо multiple = false
         items.forEach(otherItem => {
           if (otherItem !== item) {
             otherItem.querySelector('.accordion-content').classList.remove('active');
+            otherItem.querySelector('.accordion-arrow').style.transform = 'rotate(0deg)';
           }
         });
       }
-      // Перемикаємо активний стан поточної секції
       content.classList.toggle('active');
+      arrow.style.transform = content.classList.contains('active') ? 'rotate(180deg)' : 'rotate(0deg)';
     });
   });
 });
